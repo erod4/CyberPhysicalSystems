@@ -16,7 +16,6 @@ def SCAN():
         time.sleep(0.09)
         # Reverse direction when limits are reached
         if step+pulse>servos.PAN_MAX_PW:
-            print(step+pulse>servos.PAN_MAX_PW)
             pulse=servos.PAN_MAX_PW
             step=-abs(step)
             pass

@@ -41,16 +41,26 @@ def PROCESS_FRAME():
 
     #detect the markers
     corners, ids, rejected =detector.detectMarkers(gray)
+    x,y =-1,-1
     if ids is not None:
         for marker_corners in corners:
+            #extract coordinate pairs for top right, top left, bottom left, bottom right
+            TR,TL,BL,BR=marker_corners.reshape((4,2)).astype(int)
+
+            #calculate center (x,y) coordinates
+            x=(TR[0]+BL[0])/2
+            y=(TR[1]+BL[1])/2
+            
             pts = marker_corners.reshape((4, 2)).astype(int)
             cv2.polylines(frame, [pts], isClosed=True, color=(0, 255, 0), thickness=2)
-
+            # draw a dot at (x,y) center
+            cv2.circle(frame, (int(x), int(y)), 5, (0, 0, 255), -1)
+    print(x,y)
     # Display the frame with detected markers
     cv2.imshow('Detected Markers', frame)
+    cv2.waitKey(1)
+    return [True, x,y]
     
-    # Press 'q' to exit the loop
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        return False
-    return True
+    
+    
 
