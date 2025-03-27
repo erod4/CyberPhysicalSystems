@@ -1,29 +1,30 @@
-import RPI.GPIO as GPIO
+import pigpio
+import time
+
 
 PAN_GPIO=27
 TILT_GPIO=17
 
-TILT_MIN_DUTY=0
-TILT_MAX_DUTY=100
+PAN_MIN_PW = 500
+PAN_MAX_PW = 2500
 
-PAN_MIN_DUTY=0
-PAN_MAX_DUTY=100
-
-
-PAN_PWM=None
-TILT_PWM=None
+pi = None
 
 
 def GPIO_INIT():
-    GPIO.setup(PAN_GPIO,GPIO.OUT)
-    GPIO.setup(TILT_GPIO,GPIO.OUT)
-    PAN_PWM=GPIO.PWM(PAN_GPIO, 50)  
-    TILT_PWM=GPIO.PWM(TILT_GPIO, 50)  
+    global pi
+    pi = pigpio.pi()
+    if not pi.connected:
+        raise Exception("Could not connect to pigpio daemon!")
     SERVO_CALIBRATION()
 
 
 def SERVO_CALIBRATION():
-    pass
+    pi.set_servo_pulsewidth(PAN_GPIO, PAN_MIN_PW)
+    # pi.set_servo_pulsewidth(TILT_GPIO, TILT_MIN_PW)
+    time.sleep(0.5)  # Allow time for the servos to reach the position
 
 
-
+def set_pan_pulsewidth(pw):
+    """Set the pulse width for the pan servo."""
+    pi.set_servo_pulsewidth(PAN_GPIO, pw)
