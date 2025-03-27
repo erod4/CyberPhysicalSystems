@@ -5,28 +5,36 @@ import state_machine
 
 def SCAN():
     """
-    Continuously scan the pan servo between PAN_MIN_PW and PAN_MAX_PW.
-    Adjust the step value for smoother or faster movement.
+    Perform one scan update of the pan servo between PAN_MIN_PW and PAN_MAX_PW.
+    The pulse and step values persist across function calls.
     """
-    pulse = servos.PAN_MIN_PW
-    step = 15  # Pulse width step in microseconds; smaller step yields smoother movement
-    while True:
-        servos.set_pan_pulsewidth(pulse)
-        # Process the current frame (or perform your detection task)
-        if(detection.PROCESS_FRAME()[0]):
-            #if object is detected move to state detected state (tracking/PID controller)
-            state_machine.current_state=state_machine.STATE_DETECTED
-            return
-        time.sleep(0.09)
-        # Reverse direction when limits are reached
-        if step+pulse>servos.PAN_MAX_PW:
-            pulse=servos.PAN_MAX_PW
-            step=-abs(step)
-            pass
-        elif step+pulse<servos.PAN_MIN_PW:
-            pulse=servos.PAN_MIN_PW
-            step=abs(step)
-        else:
-            pulse+=step
+ # init static variables
+    if not hasattr(SCAN, "pulse"):
+        SCAN.pulse = servos.PAN_MIN_PW
+    if not hasattr(SCAN, "step"):
+        SCAN.step = 15  
+    
+    # update the servo position with the current pulse value
+    servos.set_pan_pulsewidth(SCAN.pulse)
 
+    #process current frame
+    detection_found,x,y = detection.PROCESS_FRAME()
+
+    #if detected FSM will change state
+    if detection_found:
+        return True
+    time.sleep(0.09)
+
+    # Adjust the pulse value and reverse direction if limits are reached
+    if SCAN.pulse + SCAN.step > servos.PAN_MAX_PW:
+        SCAN.pulse = servos.PAN_MAX_PW
+        SCAN.step = -abs(SCAN.step)
+    elif SCAN.pulse + SCAN.step < servos.PAN_MIN_PW:
+        SCAN.pulse = servos.PAN_MIN_PW
+        SCAN.step = abs(SCAN.step)
+    else:
+        SCAN.pulse += SCAN.step
+
+    return False
+    
 

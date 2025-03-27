@@ -15,8 +15,11 @@ try:
                 state_machine.current_state=state_machine.STATE_SCANNING
             case state_machine.STATE_SCANNING:
                 print("In Scanning State\n")
-                scanning.SCAN()
+                #scans until object is detected then starts pid to track object
+                if scanning.SCAN():
+                    state_machine.current_state=state_machine.STATE_DETECTED
             case state_machine.STATE_DETECTED:
+                #PID to track object
                 print("start PID\n")
             case _:
                 break;

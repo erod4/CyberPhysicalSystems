@@ -55,7 +55,6 @@ def PROCESS_FRAME():
             cv2.polylines(frame, [pts], isClosed=True, color=(0, 255, 0), thickness=2)
             # draw a dot at (x,y) center
             cv2.circle(frame, (int(x), int(y)), 5, (0, 0, 255), -1)
-    print(x,y)
     # Display the frame with detected markers
     cv2.imshow('Detected Markers', frame)
     cv2.waitKey(1)
