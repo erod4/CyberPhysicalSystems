@@ -1,7 +1,7 @@
 import servos
 import time
 import detection
-
+import state_machine
 
 def SCAN():
     """
@@ -12,7 +12,11 @@ def SCAN():
     step = 15  # Pulse width step in microseconds; smaller step yields smoother movement
     while True:
         servos.set_pan_pulsewidth(pulse)
-        detection.PROCESS_FRAME()  # Process the current frame (or perform your detection task)
+        # Process the current frame (or perform your detection task)
+        if(detection.PROCESS_FRAME()[0]):
+            #if object is detected move to state detected state (tracking/PID controller)
+            state_machine.current_state=state_machine.STATE_DETECTED
+            return
         time.sleep(0.09)
         # Reverse direction when limits are reached
         if step+pulse>servos.PAN_MAX_PW:

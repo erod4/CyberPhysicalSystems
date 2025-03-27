@@ -22,7 +22,7 @@ def GPIO_INIT():
 def SERVO_CALIBRATION():
     pi.set_servo_pulsewidth(PAN_GPIO, PAN_MIN_PW)
     # pi.set_servo_pulsewidth(TILT_GPIO, TILT_MIN_PW)
-    time.sleep(0.5)  # Allow time for the servos to reach the position
+    time.sleep(0.5) 
 
 
 def set_pan_pulsewidth(pw):

@@ -59,7 +59,8 @@ def PROCESS_FRAME():
     # Display the frame with detected markers
     cv2.imshow('Detected Markers', frame)
     cv2.waitKey(1)
-    return [True, x,y]
+
+    return [(x!=-1 and y!=-1), x,y]
     
     
     
