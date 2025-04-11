@@ -4,10 +4,14 @@ import scanning
 import servos
 import detection
 import time 
+
+LOST_START_TIME =   0
+
 try:
     servos.GPIO_INIT()
     detection.VIDEO_INIT()
     while True:
+        current_time = time.monotonic() 
         match state_machine.current_state:
             case state_machine.STATE_INIT:
                 print("In Init State\n")
@@ -19,17 +23,25 @@ try:
                     state_machine.current_state=state_machine.STATE_DETECTED
             case state_machine.STATE_DETECTED:
                 #PID to track object
-                x_cord,y_coord
-                if detection.PROCESS_FRAME():
-                    _,x,y=detection.PROCESS_FRAME() #unpack X,Y coordinates of where frame was detected
+                print("start PID\n")
+                if detection.PROCESS_FRAME()[0]:
+                    _,x,y=detection.PROCESS_FRAME() #unpack X,Y coordinates of where frame was detected [T/F,x,y]
                     #update PID controller
                 else:
                     #start timer 5 second timer
-
+                    LOST_START_TIME=current_time
                     #move to lost state
+                    state_machine.current_state=STATE_LOST
 
-
-                print("start PID\n")
+            case state_machine.STATE_LOST:
+                if detection.PROCESS_FRAME()[0]:
+                    state_machine.current_state=STATE_DETECTED
+                elif current_time-LOST_START_TIME<5:
+                    #keep trying PID until frame is detected or timer hits 5 seconds
+                    pass
+                else:
+                    #time ellapsed move back to scanning 
+                    state_machine.current_state=state_machine.STATE_SCANNING
             case _:
                 break;
 

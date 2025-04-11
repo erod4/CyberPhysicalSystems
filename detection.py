@@ -38,7 +38,7 @@ def PROCESS_FRAME():
 
     #create ArUco detector
     detector = cv2.aruco.ArucoDetector(aruco_dict,parameters)
-
+a,b,c=[x,y,z]
     #detect the markers
     corners, ids, rejected =detector.detectMarkers(gray)
     x,y =-1,-1
