@@ -44,10 +44,10 @@ def PROCESS_FRAME():
 
     #create ArUco detector
     detector = cv2.aruco.ArucoDetector(aruco_dict,parameters)
-a,b,c=[x,y,z]
+    #a,b,c=[x,y,z]
     #detect the markers
     corners, ids, rejected =detector.detectMarkers(gray)
-    x,y =-1,-1
+    x,y =0,0
     if ids is not None:
         for marker_corners in corners:
             #extract coordinate pairs for top right, top left, bottom left, bottom right
@@ -64,8 +64,8 @@ a,b,c=[x,y,z]
     # Display the frame with detected markers
     cv2.imshow('Detected Markers', frame)
     cv2.waitKey(1)
-
-    return [(x!=-1 and y!=-1), x,y]
+    
+    return [(x!=0 and y!=0), x,y]
     
     
     

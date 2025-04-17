@@ -25,17 +25,24 @@ try:
                 #PID to track object
                 print("start PID\n")
                 if detection.PROCESS_FRAME()[0]:
-                    _,x,y=detection.PROCESS_FRAME() #unpack X,Y coordinates of where frame was detected [T/F,x,y]
+                    # _,x,y=detection.PROCESS_FRAME() #unpack X,Y coordinates of where frame was detected [T/F,x,y]
+                    # print("x: ",x)
+                    # print("y: ",y)
+                    # pan_pwm,tilt_pwm=servos.coordinates_to_pw(x,y)
+                    # servos.set_pan_pulsewidth(pan_pwm)
+                    # servos.set_tilt_pulsewidth(tilt_pwm)
+                    # time.sleep(5)
+                    pass
                     #update PID controller
                 else:
                     #start timer 5 second timer
                     LOST_START_TIME=current_time
                     #move to lost state
-                    state_machine.current_state=STATE_LOST
+                    state_machine.current_state=state_machine.STATE_LOST
 
             case state_machine.STATE_LOST:
                 if detection.PROCESS_FRAME()[0]:
-                    state_machine.current_state=STATE_DETECTED
+                    state_machine.current_state=state_machine.STATE_DETECTED
                 elif current_time-LOST_START_TIME<5:
                     #keep trying PID until frame is detected or timer hits 5 seconds
                     pass
@@ -47,3 +54,4 @@ try:
 
 finally:
     detection.VIDEO_DEINIT()
+    servos.GPIO_DEINIT()
