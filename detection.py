@@ -1,6 +1,10 @@
 import cv2
 import numpy as np
 from picamera2 import Picamera2
+from libcamera import Transform 
+
+CAMERA_WIDTH=640
+CAMERA_HEIGHT=480
 
 picam2 = None
 face_cascade = None
@@ -10,6 +14,8 @@ def VIDEO_INIT():
     # Initialize the Picamera2 instance
     picam2 = Picamera2()
     config = picam2.create_preview_configuration(main={"size": (640, 480)})
+    config["transform"] = Transform(vflip=True, hflip=True)
+
     picam2.configure(config)
     picam2.start()
     

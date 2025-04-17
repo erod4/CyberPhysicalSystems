@@ -1,6 +1,6 @@
 import pigpio
 import time
-
+import detetion
 
 PAN_GPIO=27
 TILT_GPIO=17
@@ -28,3 +28,11 @@ def SERVO_CALIBRATION():
 def set_pan_pulsewidth(pw):
     """Set the pulse width for the pan servo."""
     pi.set_servo_pulsewidth(PAN_GPIO, pw)
+
+def coordinates_to_pw(x,y):
+    #normalize x,y cordinates between [-1,1]
+    normalized_x=(x-detection.CAMERA_WIDTH/2)/(detection.CAMERA_WIDTH/2)
+    normalized_x=(y-detection.CAMERA_HEIGHT/2)/(detection.CAMERA_HEIGHT/2)
+
+    #normalize coordinates to servo pw
+    pan_angle=normalized_x*PAN_
