@@ -1,72 +1,71 @@
+# detection.py
+
 import cv2
 import numpy as np
 from picamera2 import Picamera2
-from libcamera import Transform 
-
-CAMERA_WIDTH=640
-CAMERA_HEIGHT=480
-
+from libcamera import Transform
+import os 
+CAMERA_WIDTH    =   640
+CAMERA_HEIGHT   =   480
+HORIZONTAL_FOV  =   60
+VERTICAL_FOV    =   40
+# --- PiCamera2 setup ---
 picam2 = None
-face_cascade = None
 
 def VIDEO_INIT():
-    global picam2, face_cascade
-    # Initialize the Picamera2 instance
+    global picam2
     picam2 = Picamera2()
-    config = picam2.create_preview_configuration(main={"size": (640, 480)})
-    config["transform"] = Transform(vflip=True, hflip=True)
+    config = picam2.create_preview_configuration(
+        main={"size": (CAMERA_WIDTH, CAMERA_HEIGHT)},
+        controls={"FrameDurationLimits": (10000, 10000)}  # 10000 μs = 100 FPS max
 
+    )
+    config["transform"] = Transform(vflip=True, hflip=True)
     picam2.configure(config)
     picam2.start()
-    
-    # Load the Haar cascade for frontal face detection
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    if face_cascade.empty():
-        raise Exception("Could not load face cascade classifier.")
 
 def VIDEO_DEINIT():
-    global picam2
-    # picam2.stop()
     cv2.destroyAllWindows()
+    # picam2.stop()  # if you ever want to fully shut the camera
+
+# --- OpenCV AprilTag detector setup ---
+# Make sure your cv2.__version__ >= "4.7.0"
+aruco_dict  = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_APRILTAG_36h11)
+aruco_params = cv2.aruco.DetectorParameters()
+at_detector = cv2.aruco.ArucoDetector(aruco_dict, aruco_params)
 
 def PROCESS_FRAME():
-    # global picam2, face_cascade
+    """
+    Captures one frame, detects AprilTags, draws debug info, and returns:
+        (detected: bool, x: int, y: int)
+    """
+    # 1) Grab frame & convert to BGR + gray
     frame = picam2.capture_array()
+    frame_bgr = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+    gray      = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
 
-    # convert from RGB to BGR for OpenCV
-    frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
-    
-    # Convert the frame to grayscale 
-    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    
-    aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_6X6_250)
-    parameters =cv2.aruco.DetectorParameters()
+    # 2) Detect AprilTags
+    corners, ids, _ = at_detector.detectMarkers(gray)
 
-    #create ArUco detector
-    detector = cv2.aruco.ArucoDetector(aruco_dict,parameters)
-    #a,b,c=[x,y,z]
-    #detect the markers
-    corners, ids, rejected =detector.detectMarkers(gray)
-    x,y =0,0
-    if ids is not None:
-        for marker_corners in corners:
-            #extract coordinate pairs for top right, top left, bottom left, bottom right
-            TR,TL,BL,BR=marker_corners.reshape((4,2)).astype(int)
+    if ids is not None and len(ids) > 0:
+        # Just use the first detected tag (or pick by id)
+        c = corners[0].reshape((4, 2))
+        x = int(c[:, 0].mean())
+        y = int(c[:, 1].mean())
+        detected = True
 
-            #calculate center (x,y) coordinates
-            x=(TR[0]+BL[0])/2
-            y=(TR[1]+BL[1])/2
-            
-            pts = marker_corners.reshape((4, 2)).astype(int)
-            cv2.polylines(frame, [pts], isClosed=True, color=(0, 255, 0), thickness=2)
-            # draw a dot at (x,y) center
-            cv2.circle(frame, (int(x), int(y)), 5, (0, 0, 255), -1)
-    # Display the frame with detected markers
-    cv2.imshow('Detected Markers', frame)
-    cv2.waitKey(1)
-    
-    return [(x!=0 and y!=0), x,y]
-    
-    
-    
+        # Draw the quad and center
+        for i in range(4):
+            p1 = tuple(c[i].astype(int))
+            p2 = tuple(c[(i + 1) % 4].astype(int))
+            cv2.line(frame_bgr, p1, p2, (0, 255, 0), 2)
+        cv2.circle(frame_bgr, (x, y), 4, (0, 0, 255), -1)
+    else:
+        x, y, detected = 0, 0, False
 
+    if os.environ.get("DISPLAY") is not None:
+        cv2.imshow("AprilTag Detection", frame_bgr)
+        cv2.waitKey(1)
+
+    # 4) Return flag + coordinates
+    return [detected, x, y]

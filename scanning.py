@@ -8,11 +8,13 @@ def SCAN():
     Perform one scan update of the pan servo between PAN_MIN_PW and PAN_MAX_PW.
     The pulse and step values persist across function calls.
     """
+    servos.set_tilt_pulsewidth(servos.tilt_center)
+
  # init static variables
     if not hasattr(SCAN, "pulse"):
         SCAN.pulse = servos.PAN_MIN_PW
     if not hasattr(SCAN, "step"):
-        SCAN.step = 15  
+        SCAN.step = 25  
     
     # update the servo position with the current pulse value
     servos.set_pan_pulsewidth(SCAN.pulse)
